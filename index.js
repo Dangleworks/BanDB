@@ -11,9 +11,14 @@ const express = require('express');
 const app = express();
 
 mariadb.createConnection(config.sql).then(db => {
-    db.query(fs.readFileSync("./bans.sql").toString());
+    console.log("connected to database")
+    if(fs.existsSync("./bans.sql")) {
+        db.query(fs.readFileSync("./bans.sql").toString());
+    } else {
+        console.log("bans.sql does not exist! skipping table creation\nWARNING: THIS MAY CAUSE ISSUES IF YOU HAVENT RAN IT AT LEAST ONCE")
+    }
     app.listen(config.stormworks.port, config.stormworks.hostname, () => {
-        console.log("server started");
+        console.log("webserver started");
     });
     app.get('/check', (req, res) => {
         if (!req.query.steam_id) {
