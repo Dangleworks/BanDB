@@ -9,7 +9,6 @@ const config = require("./config.json");
 const mariadb = require('mariadb');
 const express = require('express');
 const app = express();
-
 mariadb.createConnection(config.sql).then(db => {
     console.log("connected to database")
     if(fs.existsSync("./bans.sql")) {
@@ -35,19 +34,42 @@ mariadb.createConnection(config.sql).then(db => {
             res.send(response[0]).end();
         })
     });
+	app.get('/checkall', (req, res) => {
+		console.log(req.query)
+		if (!req.query.ids) {
+            return res.send({
+                code: 400,
+                status: false
+            }).end();
+        }
+        db.query(`SELECT * FROM bans WHERE steam_id IN (${req.query.ids.replace(/([^0-9]*[^,\d])/g)})`).then((response) => {
+            if (response[0] === undefined) return res.send({
+                status: false
+            }).end();
+			res1 = {}
+            res1.status = true;
+			res1.bans = response
+            res.send(res1).end();
+        })
+	})
     app.get("/ban", (req, res) => {
-        if (!req.query.steam_id || !req.query.reason || !req.query.moderator || !req.query.banned_from) return res.send({
+        if (!req.query.steam_id || !req.query.moderator || !req.query.banned_from || !req.query.username) return res.send({
             code: 400,
             status: false
         }).end();
-        db.query('INSERT INTO bans (steam_id, reason, moderator, banned_from) VALUES (?,?,?,?)', [req.query.steam_id, req.query.reason, req.query.moderator, req.query.banned_from]).then(response => {
+		if (req.query.reason == "") req.query.reason = "No Reason Provided"
+        db.query('INSERT INTO bans (steam_id, username, reason, moderator, banned_from) VALUES (?,?,?,?,?)', [req.query.steam_id, req.query.username, req.query.reason, req.query.moderator, req.query.banned_from]).then(response => {
             response.status = true;
             response.query = req.query
             res.send(response).end();
+			console.log(response);
         }).catch((err) => {
             err.status = false;
             err.query = req.query
-            if (err) return res.send(err).end()
+            if (err) {
+				console.log(err);
+				return res.send(err).end()
+			}
         })
     })
 });
