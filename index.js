@@ -20,12 +20,16 @@ mariadb.createConnection(config.sql).then(db => {
         console.log("webserver started");
     });
     app.get('/check', (req, res) => {
-        if (!req.query.steam_id) {
+        if (!req.query.steam_id || !req.query.p) {
             return res.send({
                 code: 400,
                 status: false
             }).end();
         }
+		if (req.query.p != config.stormworks.password) return res.send({
+			code: 401,
+			status: false
+		}).end();
         db.query(`SELECT * FROM bans WHERE steam_id = ?`, [req.query.steam_id]).then((response) => {
             if (response[0] === undefined) return res.send({
                 status: false
@@ -36,12 +40,16 @@ mariadb.createConnection(config.sql).then(db => {
     });
 	app.get('/checkall', (req, res) => {
 		console.log(req.query)
-		if (!req.query.ids) {
+		if (!req.query.ids || !req.query.p) {
             return res.send({
                 code: 400,
                 status: false
             }).end();
         }
+		if (req.query.p != config.stormworks.password) return res.send({
+			code: 401,
+			status: false
+		}).end();
         db.query(`SELECT * FROM bans WHERE steam_id IN (${req.query.ids.replace(/([^0-9]*[^,\d])/g)})`).then((response) => {
             if (response[0] === undefined) return res.send({
                 status: false
@@ -53,10 +61,14 @@ mariadb.createConnection(config.sql).then(db => {
         })
 	})
     app.get("/ban", (req, res) => {
-        if (!req.query.steam_id || !req.query.moderator || !req.query.banned_from || !req.query.username) return res.send({
+        if (!req.query.steam_id || !req.query.moderator || !req.query.banned_from || !req.query.username || !req.query.p) return res.send({
             code: 400,
             status: false
         }).end();
+		if (req.query.p != config.stormworks.password) return res.send({
+			code: 401,
+			status: false
+		}).end();
 		if (req.query.reason == "") req.query.reason = "No Reason Provided"
         db.query('INSERT INTO bans (steam_id, username, reason, moderator, banned_from) VALUES (?,?,?,?,?)', [req.query.steam_id, req.query.username, req.query.reason, req.query.moderator, req.query.banned_from]).then(response => {
             response.status = true;
