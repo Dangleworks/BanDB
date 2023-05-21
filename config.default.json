@@ -8,6 +8,7 @@
     },
     "stormworks": {
         "port": 9007,
-        "hostname": "0.0.0.0"
+        "hostname": "127.0.0.1",
+		"password": "ChangeMeFuckBoi"
     }
 }
