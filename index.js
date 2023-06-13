@@ -50,7 +50,17 @@ mariadb.createConnection(config.sql).then(db => {
 			code: 401,
 			status: false
 		}).end();
-        db.query(`SELECT * FROM bans WHERE steam_id IN (${req.query.ids.replace(/([^0-9]*[^,\d])/g)})`).then((response) => {
+		// Rip steam IDs out of the array
+		let ids = JSON.parse(req.query.ids);
+
+		let steam_ids = [];
+		for (let i = 0; i < ids.length; i++) {
+			steam_ids.push(ids[i].steam_id);
+		}
+		//console.log(steam_ids);
+		//console.log(steam_ids.join(","));
+		//console.log(`SELECT * FROM bans WHERE steam_id IN (${steam_ids.join(",")})`);
+        db.query(`SELECT * FROM bans WHERE steam_id IN (${steam_ids.join(",")})`).then((response) => {
             if (response[0] === undefined) return res.send({
                 status: false
             }).end();
